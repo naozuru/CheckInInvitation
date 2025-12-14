@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event Check-In Sekolah</title>
+<link rel="icon" type="image/png" href="assets/logo_gold.png"/>
+<title>Event Check-In Sekolah Tunas Mekar Indonesia</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -100,7 +101,7 @@ body {
 /* ===== COUNTER ===== */
 .counter {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin: 22px 0;
 }
@@ -134,6 +135,7 @@ body {
 .counter-card.shs { border-top: 5px solid #2563eb; }
 .counter-card.jhs { border-top: 5px solid #16a34a; }
 .counter-card.es  { border-top: 5px solid #f59e0b; }
+.counter-card.ecc { border-top: 5px solid #f5420b; }
 
 /* ===== TABLE ===== */
 .table-box {
@@ -222,20 +224,25 @@ th {
 </div>
 
 <div class="counter">
-  <div class="counter-card shs">
-    <h4>SHS</h4>
-    <div class="progress"><div id="barSHS" class="progress-bar"></div></div>
-    <div class="counter-value" id="countSHS">0 / 0</div>
+  <div class="counter-card ecc">
+    <h4>ECC</h4>
+    <div class="progress"><div id="barECC" class="progress-bar"></div></div>
+    <div class="counter-value" id="countECC">0 / 0</div>
+  </div>
+  <div class="counter-card es">
+    <h4>ES</h4>
+    <div class="progress"><div id="barES" class="progress-bar"></div></div>
+    <div class="counter-value" id="countES">0 / 0</div>
   </div>
   <div class="counter-card jhs">
     <h4>JHS</h4>
     <div class="progress"><div id="barJHS" class="progress-bar"></div></div>
     <div class="counter-value" id="countJHS">0 / 0</div>
   </div>
-  <div class="counter-card es">
-    <h4>ES</h4>
-    <div class="progress"><div id="barES" class="progress-bar"></div></div>
-    <div class="counter-value" id="countES">0 / 0</div>
+  <div class="counter-card shs">
+    <h4>SHS</h4>
+    <div class="progress"><div id="barSHS" class="progress-bar"></div></div>
+    <div class="counter-value" id="countSHS">0 / 0</div>
   </div>
 </div>
 
@@ -254,11 +261,11 @@ th {
 </div>
 
 <script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxkEb3IMua0YU6fq7gP_yxTbzPxk1Sj55TGj0_uFvUmf395_3is8aeFExAqBCpBqh85GQ/exec";
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyP4iCdTNdFLJNTYKqg06N9-M0wpIuGvCh8gUB4gGqzeO8B1sIpVa8xcypkG00JxDDqyA/exec";
 
 let html5QrCode;
 let checkInData = [];
-let totalStudent = { SHS:0, JHS:0, ES:0 };
+let totalStudent = { SHS:0, JHS:0, ES:0, ECC:0 };
 
 function setStatus(text,type="ready"){
   const s=document.getElementById("status");
@@ -308,7 +315,8 @@ function loadTotal(){
     totalStudent={
       SHS:d.SHS.total,
       JHS:d.JHS.total,
-      ES:d.ES.total
+      ES:d.ES.total,
+      ECC:d.ECC.total
     };
   });
 }
@@ -338,18 +346,20 @@ function renderTable(data){
 }
 
 function updateCounter(data) {
-  let count = { SHS: 0, JHS: 0, ES: 0 };
+  let count = { SHS: 0, JHS: 0, ES: 0, ECC: 0 };
 
   data.forEach(row => {
     const lvl = row.level?.toUpperCase();
     if (lvl === "SHS") count.SHS++;
     if (lvl === "JHS") count.JHS++;
     if (lvl === "ES")  count.ES++;
+    if (lvl === "ECC")  count.ECC++;
   });
 
   updateOne("SHS", count.SHS, totalStudent.SHS);
   updateOne("JHS", count.JHS, totalStudent.JHS);
   updateOne("ES",  count.ES,  totalStudent.ES);
+  updateOne("ECC",  count.ECC,  totalStudent.ECC);
 }
 
 
