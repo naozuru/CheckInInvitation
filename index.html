@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Check-In Sekolah</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+@media (max-width: 600px) {
+  .counter {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== GLOBAL ===== */
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f1f5f9;
+  padding: 16px;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: linear-gradient(135deg, #003f33, #005c46);
+  color: white;
+  padding: 18px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+.header img {
+  width: 60px;
+  margin-bottom: -10px;
+}
+
+/* ===== STATUS ===== */
+.status {
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+  margin: 14px 0;
+}
+.status.ready { background: #dcfce7; color: #166534; }
+.status.busy  { background: #fef3c7; color: #92400e; }
+.status.error { background: #fee2e2; color: #991b1b; }
+
+/* ===== SCANNER ===== */
+.scanner-box {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  max-width: 360px;
+  margin: 16px auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+#reader {
+  width: 100%;
+}
+.scanner-text {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+}
+
+/* ===== CARD RESULT ===== */
+.card {
+  display: none;
+  background: white;
+  margin: 16px auto;
+  padding: 16px;
+  border-radius: 16px;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.1);
+  animation: pop .3s ease;
+}
+@keyframes pop {
+  from { transform: scale(.9); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.card p { margin: 6px 0; }
+
+/* ===== SEARCH ===== */
+.search-box {
+  max-width: 360px;
+  margin: 10px auto;
+}
+.search-box input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #cbd5f5;
+  font-size: 14px;
+}
+
+/* ===== COUNTER ===== */
+.counter {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 22px 0;
+}
+.counter-card {
+  background: white;
+  padding: 14px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+.counter-card h4 {
+  margin-bottom: 8px;
+}
+.progress {
+  width: 100%;
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  transition: width .4s ease;
+}
+.counter-value {
+  font-weight: bold;
+  font-size: 16px;
+}
+.counter-card.shs { border-top: 5px solid #2563eb; }
+.counter-card.jhs { border-top: 5px solid #16a34a; }
+.counter-card.es  { border-top: 5px solid #f59e0b; }
+
+/* ===== TABLE ===== */
+.table-box {
+  background: white;
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+    text-align: center;
+}
+th {
+  background: #003f33;
+  color: white;
+}
+.highlight {
+  background: #dcfce7;
+  font-weight: bold;
+}
+
+.footer {
+  margin-top: 30px;
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.section-title {
+  margin: 30px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #003f33;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, #003f33, transparent);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="assets/logo_gold.png">
+  <h2>SEKOLAH TUNAS MEKAR INDONESIA</h2>
+  <p>School Production 2026 - Event Check-In</p>
+</div>
+
+<div id="status" class="status ready">🟢 Ready to Scan</div>
+
+<div class="scanner-box">
+  <div id="reader"></div>
+  <p class="scanner-text">Arahkan QR Code ke kamera</p>
+</div>
+
+<div class="search-box">
+  <input type="text" id="searchInput"
+    placeholder="🔍 Cari nama yang sudah check-in..."
+    onkeyup="filterTable()">
+</div>
+
+<div class="card" id="card">
+  <p><b>Nama:</b> <span id="nama"></span></p>
+  <p><b>Kelas:</b> <span id="kelas"></span></p>
+  <p><b>Level:</b> <span id="level"></span></p>
+  <p id="result" style="font-size:18px;font-weight:bold;"></p>
+</div>
+
+<div class="counter">
+  <div class="counter-card shs">
+    <h4>SHS</h4>
+    <div class="progress"><div id="barSHS" class="progress-bar"></div></div>
+    <div class="counter-value" id="countSHS">0 / 0</div>
+  </div>
+  <div class="counter-card jhs">
+    <h4>JHS</h4>
+    <div class="progress"><div id="barJHS" class="progress-bar"></div></div>
+    <div class="counter-value" id="countJHS">0 / 0</div>
+  </div>
+  <div class="counter-card es">
+    <h4>ES</h4>
+    <div class="progress"><div id="barES" class="progress-bar"></div></div>
+    <div class="counter-value" id="countES">0 / 0</div>
+  </div>
+</div>
+
+<div class="section-title">
+  <h3>Daftar Hadir</h3>
+</div>
+<div class="table-box" style="max-height:340px;overflow:auto">
+<table>
+<thead>
+<tr>
+  <th>No</th><th>Nama</th><th>Kelas</th><th>Level</th><th>Waktu</th>
+</tr>
+</thead>
+<tbody id="checkinTable"></tbody>
+</table>
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxkEb3IMua0YU6fq7gP_yxTbzPxk1Sj55TGj0_uFvUmf395_3is8aeFExAqBCpBqh85GQ/exec";
+
+let html5QrCode;
+let checkInData = [];
+let totalStudent = { SHS:0, JHS:0, ES:0 };
+
+function setStatus(text,type="ready"){
+  const s=document.getElementById("status");
+  s.textContent=text;
+  s.className="status "+type;
+}
+
+function startScan(){
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:250}, txt=>{
+    html5QrCode.stop();
+    processCheckIn(txt.trim());
+  });
+}
+
+function processCheckIn(name){
+  setStatus("📷 Processing QR...","busy");
+  fetch(WEBAPP_URL+"?code="+encodeURIComponent(name))
+  .then(r=>r.json())
+  .then(d=>{
+    document.getElementById("card").style.display="block";
+    nama.textContent=d.name||"-";
+    kelas.textContent=d.kelas||"-";
+    level.textContent=d.level||"-";
+
+    if(d.status==="success"){
+      result.textContent="✅ CHECK-IN BERHASIL";
+      loadTable();
+    }else if(d.status==="duplicate"){
+      result.textContent="⚠️ SUDAH CHECK-IN";
+    }else{
+      result.textContent="❌ DATA TIDAK DITEMUKAN";
+    }
+
+    setTimeout(()=>{
+      card.style.display="none";
+      setStatus("🟢 Ready to Scan","ready");
+      startScan();
+    },3000);
+  });
+}
+
+function loadTotal(){
+  fetch(WEBAPP_URL+"?list=counter")
+  .then(r=>r.json())
+  .then(d=>{
+    totalStudent={
+      SHS:d.SHS.total,
+      JHS:d.JHS.total,
+      ES:d.ES.total
+    };
+  });
+}
+
+function loadTable(){
+  fetch(WEBAPP_URL+"?list=checkin")
+  .then(r=>r.json())
+  .then(d=>{
+    checkInData=d;
+    renderTable(d);
+    updateCounter(d);
+  });
+}
+
+function renderTable(data){
+  checkinTable.innerHTML="";
+  data.forEach((r,i)=>{
+    checkinTable.innerHTML+=`
+      <tr class="${i===0?'highlight':''}">
+        <td>${i+1}</td>
+        <td>${r.name}</td>
+        <td>${r.kelas}</td>
+        <td>${r.level}</td>
+        <td>${r.time}</td>
+      </tr>`;
+  });
+}
+
+function updateCounter(data) {
+  let count = { SHS: 0, JHS: 0, ES: 0 };
+
+  data.forEach(row => {
+    const lvl = row.level?.toUpperCase();
+    if (lvl === "SHS") count.SHS++;
+    if (lvl === "JHS") count.JHS++;
+    if (lvl === "ES")  count.ES++;
+  });
+
+  updateOne("SHS", count.SHS, totalStudent.SHS);
+  updateOne("JHS", count.JHS, totalStudent.JHS);
+  updateOne("ES",  count.ES,  totalStudent.ES);
+}
+
+
+function updateOne(l,h,t){
+  let p=t?Math.round(h/t*100):0;
+  document.getElementById("count"+l).textContent=`${h} / ${t}`;
+  let bar=document.getElementById("bar"+l);
+  bar.style.width=p+"%";
+  bar.style.background=p<30?"#ef4444":p<70?"#f59e0b":"#22c55e";
+}
+
+function filterTable(){
+  let k=searchInput.value.toLowerCase();
+  renderTable(checkInData.filter(r=>r.name.toLowerCase().includes(k)));
+}
+
+loadTotal();
+loadTable();
+startScan();
+setInterval(loadTable,10000);
+</script>
+
+<footer class="footer">
+  © <span>2025</span> Mr Rayhan. All rights reserved.
+</footer>
+
+
+</body>
+</html>
